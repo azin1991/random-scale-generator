@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<head>
+  <title>Random Scale Generator</title>
+  <style>
+    /* From Uiverse.io by catraco */ 
+    .btn-class-name {
+      --primary: 255, 90, 120;
+      --secondary: 150, 50, 60;
+      width: 60px;
+      height: 50px;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      user-select: none;
+      touch-action: manipulation;
+      outline: 10px solid rgb(var(--primary), .5);
+      border-radius: 100%;
+      position: relative;
+      transition: .3s;
+    }
+
+    .btn-class-name .back {
+      background: rgb(var(--secondary));
+      border-radius: 100%;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .btn-class-name .front {
+      background: linear-gradient(0deg, rgba(var(--primary), .6) 20%, rgba(var(--primary)) 50%);
+      box-shadow: 0 .5em 1em -0.2em rgba(var(--secondary), .5);
+      border-radius: 100%;
+      position: absolute;
+      border: 1px solid rgb(var(--secondary));
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.2rem;
+      font-weight: 600;
+      font-family: inherit;
+      transform: translateY(-15%);
+      transition: .15s;
+      color: rgb(var(--secondary));
+    }
+
+    .btn-class-name:active .front {
+      transform: translateY(0%);
+      box-shadow: 0 0;
+    }
+
+/*Result Container*/
+    .container {
+      margin-top: 80px;
+      width: 95%;
+      max-width: 380px;
+      margin-left: auto;
+      margin-right: auto;
+      position: relative;
+    }
+
+    .container > * {
+      width: calc(100% - 20px);
+      height: 80px;
+      border: solid 1px #a8d5e2;
+      background-color: #d4e9f7;
+      position: absolute;
+      border-radius: 10px;
+      padding: 10px;
+      color: #1a4d6f;
+      box-shadow: 0px 8px 20px -10px #7ab5d0;
+      text-shadow: none;
+      letter-spacing: 1px;
+      background-image: radial-gradient(circle 160px at 50% 120%, #b8dff0, #d4e9f7);
+    }
+
+    .card1 {
+      width: calc(100% - 60px);
+      margin: -20px 0px 0px 20px;
+    }
+    .card2 {
+      width: calc(100% - 40px);
+      margin: -10px 0px 0px 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div style="font-family:Arial; max-width:800px; margin:auto; padding:20px; padding-bottom:200px; margin-bottom:100px;">
+    <!-- SCALES -->
+    <div style="border:1px solid #ccc; padding:15px; margin-bottom:20px; border-radius:8px;">
+      <h3>Scales</h3>
+      <label><input type="checkbox" class="scale" value="Major scale" checked> Major</label><br>
+      <label><input type="checkbox" class="scale" value="Minor scale, harmonic form" checked> Harmonic Minor</label><br>
+      <label><input type="checkbox" class="scale" value="Minor scale, melodic form" checked> Melodic Minor</label><br>
+      <label><input type="checkbox" class="scale" value="Chromatic scale – starting on KEY" checked> Chromatic</label><br>
+      <label><input type="checkbox" class="scale" value="Major formula pattern" checked> Formula Major</label><br>
+      <label><input type="checkbox" class="scale" value="Minor formula pattern" checked> Formula Minor</label><br><br>
+      <button onclick="toggleCategory('scale', true)">Select All</button>
+      <button onclick="toggleCategory('scale', false)">Clear All</button>
+    </div>
+    
+    <!-- CHORDS -->
+    <div style="border:1px solid #ccc; padding:15px; margin-bottom:20px; border-radius:8px;">
+      <h3>Chords</h3>
+      <label><input type="checkbox" class="chord" value="Major four-note chord, solid form" checked> Major four-note chord, solid form</label><br>
+      <label><input type="checkbox" class="chord" value="Major four-note chord, broken form" checked> Major four-note chord, broken form</label><br>
+      <label><input type="checkbox" class="chord" value="Minor four-note chord, solid form" checked> Minor four-note chord, solid form</label><br>
+      <label><input type="checkbox" class="chord" value="Minor four-note chord, broken form" checked> Minor four-note chord, broken form</label><br>
+      <label><input type="checkbox" class="chord" value="Dominant 7th of KEY major, solid form" checked> Dominant 7th, solid form</label><br>
+      <label><input type="checkbox" class="chord" value="Dominant 7th of KEY major, broken form" checked> Dominant 7th, broken form</label><br>
+      <label><input type="checkbox" class="chord" value="Diminished 7th of KEY minor, solid form" checked> Diminished 7th, solid form</label><br>
+      <label><input type="checkbox" class="chord" value="Diminished 7th of KEY minor, broken form" checked> Diminished 7th, broken form</label><br><br>
+      <button onclick="toggleCategory('chord', true)">Select All</button>
+      <button onclick="toggleCategory('chord', false)">Clear All</button>
+    </div>
+    
+    <!-- ARPEGGIOS -->
+    <div style="border:1px solid #ccc; padding:15px; margin-bottom:20px; border-radius:8px;">
+      <h3>Arpeggios</h3>
+      <label><input type="checkbox" class="arpeggio" value="Major arpeggio – root & inversions" checked> Major</label><br>
+      <label><input type="checkbox" class="arpeggio" value="Minor arpeggio – root & inversions" checked> Minor</label><br>
+      <label><input type="checkbox" class="arpeggio" value="Dominant 7th arpeggio of KEY major – root & inversions" checked> Dominant 7th</label><br>
+      <label><input type="checkbox" class="arpeggio" value="Diminished 7th arpeggio of KEY minor – root & inversions" checked> Diminished 7th</label><br><br>
+      <button onclick="toggleCategory('arpeggio', true)">Select All</button>
+      <button onclick="toggleCategory('arpeggio', false)">Clear All</button>
+    </div>
+
+    <!-- ADVANCED OPTIONS -->
+    <div style="border:1px solid #ccc; padding:15px; margin-bottom:20px; border-radius:8px;">
+      <h3>Advanced Options</h3>
+      <label><input type="checkbox" class="advancedOptions" value="Major scale separated by a 3rd"> Separated by a 3rd</label><br>
+      <label><input type="checkbox" class="advancedOptions" value="Major scale separated by a 6th"> Separated by a 6th</label><br>
+      <label><input type="checkbox" class="advancedOptions" value="Major scale in octave"> Major scale in octaves</label><br>
+      <label><input type="checkbox" class="advancedOptions" value="Minor scale, harmonic form in octave"> Minor scale, harmonic form in octaves</label><br>
+      <label><input type="checkbox" class="advancedOptions" value="Minor scale, melodic form in octave"> Minor scale, melodic form in octaves</label><br>
+      <label><input type="checkbox" class="advancedOptions" value="Chromatic scale – starting on KEY in octave"> Chromatic scale in octaves</label><br><br>
+      <button onclick="toggleCategory('advancedOptions', true)">Select All</button>
+      <button onclick="toggleCategory('advancedOptions', false)">Clear All</button>
+    </div>
+    
+    <!-- KEYS -->
+    <div style="border:1px solid #ccc; padding:15px; margin-bottom:20px; border-radius:8px;">
+      <h3>Keys</h3>
+      <label><input type="checkbox" class="key" value="C" checked> C</label>
+      <label><input type="checkbox" class="key" value="C♯/D♭" checked> C♯/D♭</label>
+      <label><input type="checkbox" class="key" value="D" checked> D</label>
+      <label><input type="checkbox" class="key" value="E♭" checked> E♭</label>
+      <label><input type="checkbox" class="key" value="E" checked> E</label>
+      <label><input type="checkbox" class="key" value="F" checked> F</label>
+      <label><input type="checkbox" class="key" value="F♯/G♭" checked> F♯/G♭</label>
+      <label><input type="checkbox" class="key" value="G" checked> G</label>
+      <label><input type="checkbox" class="key" value="A♭" checked> A♭</label>
+      <label><input type="checkbox" class="key" value="A" checked> A</label>
+      <label><input type="checkbox" class="key" value="B♭" checked> B♭</label>
+      <label><input type="checkbox" class="key" value="B" checked> B</label><br><br>
+      <button onclick="toggleCategory('key', true)">Select All</button>
+      <button onclick="toggleCategory('key', false)">Clear All</button>
+    </div><br>
+    
+    <!-- GENERATOR -->
+    <div style="text-align:center; margin-top:30px;">
+      <button class="btn-class-name" onclick="generateRandom()">
+        <span class="back"></span>
+        <span class="front"></span>
+      </button><br>
+      <div class="container">
+        <div class="card1"></div>
+        <div class="card2"></div>
+        <div class="card3">
+          <p id="result" style="font-size:clamp(16px, 5vw, 22px); margin-top:15px; font-weight:bold;"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    function toggleCategory(category, select) {
+      document.querySelectorAll('.' + category).forEach(cb => cb.checked = select);
+    }
+  
+    function generateRandom() {
+      const selectedTypes = [...document.querySelectorAll('.scale:checked, .chord:checked, .arpeggio:checked, .advancedOptions:checked')].map(cb => cb.value);
+      const selectedKeys = [...document.querySelectorAll('.key:checked')].map(cb => cb.value);
+      
+      if (selectedTypes.length === 0 || selectedKeys.length === 0) {
+        document.getElementById("result").textContent = "⚠️ Please select at least one key and one requirement.";
+        return;
+      }
+  
+      const type = selectedTypes[Math.floor(Math.random() * selectedTypes.length)];
+      const key = selectedKeys[Math.floor(Math.random() * selectedKeys.length)];
+  
+      let result = type.replace("KEY", key);
+      if (!type.includes("KEY")) {
+        result = key + " " + result;
+      }
+  
+      document.getElementById("result").textContent = result;
+    }
+  </script>
+</body>
+</html>
