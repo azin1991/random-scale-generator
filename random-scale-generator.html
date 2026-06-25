@@ -1,8 +1,12 @@
 <!DOCTYPE html>
 <head>
   <title>Random Scale Generator</title>
+
+  <!-- abcjs: renders chord notes on a musical staff (local copy) -->
+  <script src="abcjs-basic-min.js"></script>
+
   <style>
-    /* From Uiverse.io by catraco */ 
+    /* From Uiverse.io by catraco */
     .btn-class-name {
       --primary: 255, 90, 120;
       --secondary: 150, 50, 60;
@@ -18,27 +22,21 @@
       position: relative;
       transition: .3s;
     }
-
     .btn-class-name .back {
       background: rgb(var(--secondary));
       border-radius: 100%;
       position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
     }
-
     .btn-class-name .front {
       background: linear-gradient(0deg, rgba(var(--primary), .6) 20%, rgba(var(--primary)) 50%);
       box-shadow: 0 .5em 1em -0.2em rgba(var(--secondary), .5);
       border-radius: 100%;
       position: absolute;
       border: 1px solid rgb(var(--secondary));
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -49,13 +47,12 @@
       transition: .15s;
       color: rgb(var(--secondary));
     }
-
     .btn-class-name:active .front {
       transform: translateY(0%);
       box-shadow: 0 0;
     }
 
-/*Result Container*/
+    /* Result Container */
     .container {
       margin-top: 80px;
       width: 95%;
@@ -64,7 +61,6 @@
       margin-right: auto;
       position: relative;
     }
-
     .container > * {
       width: calc(100% - 20px);
       height: 80px;
@@ -79,20 +75,144 @@
       letter-spacing: 1px;
       background-image: radial-gradient(circle 160px at 50% 120%, #b8dff0, #d4e9f7);
     }
+    .card1 { width: calc(100% - 60px); margin: -20px 0px 0px 20px; }
+    .card2 { width: calc(100% - 40px); margin: -10px 0px 0px 10px; }
 
-    .card1 {
-      width: calc(100% - 60px);
-      margin: -20px 0px 0px 20px;
+    /* Review Button */
+    #review-btn {
+      display: none;
+      margin: 133px auto 0 auto;
+      padding: 10px 22px;
+      background: #1a4d6f;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      cursor: pointer;
+      width: fit-content;
+      transition: background 0.2s;
     }
-    .card2 {
-      width: calc(100% - 40px);
-      margin: -10px 0px 0px 10px;
+    #review-btn:hover { background: #2a6d9f; }
+
+    /* Review Section */
+    #review-section {
+      display: none;
+      margin-top: 50px;
+      width: 95%;
+      max-width: 380px;
+      margin-left: auto;
+      margin-right: auto;
+      font-family: Arial, sans-serif;
+      padding-bottom: 40px;
+    }
+
+    .review-card {
+      background: #eef7fb;
+      border: 1px solid #a8d5e2;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 14px;
+      color: #1a4d6f;
+    }
+    .review-card h4 {
+      margin: 0 0 10px 0;
+      font-size: 15px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #1a4d6f;
+      opacity: 0.7;
+    }
+
+    /* Note circles */
+    .notes-display {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .note-pill {
+      background: #1a4d6f;
+      color: white;
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      font-size: 12px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      flex-shrink: 0;
+      line-height: 1.2;
+    }
+
+    /* abcjs staff container */
+    #chord-staff {
+      background: white;
+      border-radius: 8px;
+      padding: 8px 4px 4px 4px;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+    /* Override abcjs default colours to match our theme */
+    #chord-staff svg {
+      width: 100% !important;
+      height: auto !important;
+    }
+    #chord-staff .abcjs-note { fill: #1a4d6f; }
+    #chord-staff .abcjs-staff { stroke: #1a4d6f; }
+
+    /* Collapsible how-to */
+    .collapsible-header {
+      cursor: pointer;
+      background: #c8e6f5;
+      border: 1px solid #a8d5e2;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: bold;
+      color: #1a4d6f;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+      margin-top: 10px;
+    }
+    .collapsible-header:hover { background: #b0d8ef; }
+    .collapsible-body {
+      display: none;
+      background: white;
+      border: 1px solid #a8d5e2;
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+      padding: 14px;
+      font-size: 14px;
+      color: #1a4d6f;
+      line-height: 1.7;
+    }
+
+    /* Interval chain */
+    .interval-node {
+      background: #1a4d6f;
+      color: white;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 12px;
+      flex-shrink: 0;
+      text-align: center;
+      line-height: 1.2;
     }
   </style>
 </head>
 
 <body>
   <div style="font-family:Arial; max-width:800px; margin:auto; padding:20px; padding-bottom:200px; margin-bottom:100px;">
+
     <!-- SCALES -->
     <div style="border:1px solid #ccc; padding:15px; margin-bottom:20px; border-radius:8px;">
       <h3>Scales</h3>
@@ -105,7 +225,7 @@
       <button onclick="toggleCategory('scale', true)">Select All</button>
       <button onclick="toggleCategory('scale', false)">Clear All</button>
     </div>
-    
+
     <!-- CHORDS -->
     <div style="border:1px solid #ccc; padding:15px; margin-bottom:20px; border-radius:8px;">
       <h3>Chords</h3>
@@ -120,7 +240,7 @@
       <button onclick="toggleCategory('chord', true)">Select All</button>
       <button onclick="toggleCategory('chord', false)">Clear All</button>
     </div>
-    
+
     <!-- ARPEGGIOS -->
     <div style="border:1px solid #ccc; padding:15px; margin-bottom:20px; border-radius:8px;">
       <h3>Arpeggios</h3>
@@ -144,7 +264,7 @@
       <button onclick="toggleCategory('advancedOptions', true)">Select All</button>
       <button onclick="toggleCategory('advancedOptions', false)">Clear All</button>
     </div>
-    
+
     <!-- KEYS -->
     <div style="border:1px solid #ccc; padding:15px; margin-bottom:20px; border-radius:8px;">
       <h3>Keys</h3>
@@ -163,7 +283,7 @@
       <button onclick="toggleCategory('key', true)">Select All</button>
       <button onclick="toggleCategory('key', false)">Clear All</button>
     </div><br>
-    
+
     <!-- GENERATOR -->
     <div style="text-align:center; margin-top:30px;">
       <button class="btn-class-name" onclick="generateRandom()">
@@ -178,31 +298,361 @@
         </div>
       </div>
     </div>
+
+    <!-- REVIEW BUTTON -->
+    <div style="text-align:center;">
+      <button id="review-btn" onclick="toggleReview()">📖 Review the Notes</button>
+    </div>
+
+    <!-- REVIEW SECTION -->
+    <div id="review-section">
+      <div id="review-content"></div>
+    </div>
+
   </div>
-  
+
   <script>
+    // ─── State ────────────────────────────────────────────────────────────────
+    let lastKey = '';
+    let lastType = '';
+    let reviewVisible = false;
+
+    // ─── Enharmonic chord note lookup table ───────────────────────────────────
+    // Precomputed correct note spellings for every key × chord type.
+    // Rules applied:
+    //   Major/minor 4-note chord: root, 3rd, 5th, octave (root repeated)
+    //   Dominant 7th: root = 5th degree of major scale; intervals M3 m3 m3
+    //   Diminished 7th: root = 7th degree (leading tone) of major scale; intervals m3 m3 m3
+    // Enharmonic double-flats (bb) and double-sharps (##) written out explicitly.
+
+    const CHORD_NOTES = {
+      // ── Major four-note chord (root, M3, P5) ──
+      major4: {
+        'C':      ['C',  'E',   'G'],
+        'C♯/D♭': ['Db', 'F',   'Ab'],
+        'D':      ['D',  'F#',  'A'],
+        'E♭':     ['Eb', 'G',   'Bb'],
+        'E':      ['E',  'G#',  'B'],
+        'F':      ['F',  'A',   'C'],
+        'F♯/G♭': ['Gb', 'Bb',  'Db'],
+        'G':      ['G',  'B',   'D'],
+        'A♭':     ['Ab', 'C',   'Eb'],
+        'A':      ['A',  'C#',  'E'],
+        'B♭':     ['Bb', 'D',   'F'],
+        'B':      ['B',  'D#',  'F#'],
+      },
+      // ── Minor four-note chord (root, m3, P5) ──
+      minor4: {
+        'C':      ['C',  'Eb',  'G'],
+        'C♯/D♭': ['Db', 'Fb',  'Ab'],  // Fb = E enharmonically
+        'D':      ['D',  'F',   'A'],
+        'E♭':     ['Eb', 'Gb',  'Bb'],
+        'E':      ['E',  'G',   'B'],
+        'F':      ['F',  'Ab',  'C'],
+        'F♯/G♭': ['Gb', 'Bbb', 'Db'],  // Bbb = A enharmonically
+        'G':      ['G',  'Bb',  'D'],
+        'A♭':     ['Ab', 'Cb',  'Eb'],
+        'A':      ['A',  'C',   'E'],
+        'B♭':     ['Bb', 'Db',  'F'],
+        'B':      ['B',  'D',   'F#'],
+      },
+      // ── Dominant 7th chord (root = 5th degree of major scale) ──
+      // Intervals from that root: M3 m3 m3
+      dom7: {
+        'C':      ['G',  'B',   'D',   'F'],   // G dom7
+        'C♯/D♭': ['Ab', 'C',   'Eb',  'Gb'],  // Ab dom7
+        'D':      ['A',  'C#',  'E',   'G'],   // A dom7
+        'E♭':     ['Bb', 'D',   'F',   'Ab'],  // Bb dom7
+        'E':      ['B',  'D#',  'F#',  'A'],   // B dom7
+        'F':      ['C',  'E',   'G',   'Bb'],  // C dom7
+        'F♯/G♭': ['Db', 'F',   'Ab',  'Cb'],  // Db dom7
+        'G':      ['D',  'F#',  'A',   'C'],   // D dom7
+        'A♭':     ['Eb', 'G',   'Bb',  'Db'],  // Eb dom7
+        'A':      ['E',  'G#',  'B',   'D'],   // E dom7
+        'B♭':     ['F',  'A',   'C',   'Eb'],  // F dom7
+        'B':      ['F#', 'A#',  'C#',  'E'],   // F# dom7
+      },
+      // ── Diminished 7th chord (root = 7th degree / leading tone of major scale) ──
+      // Intervals from that root: m3 m3 m3
+      dim7: {
+        'C':      ['B',  'D',   'F',   'Ab'],  // B dim7
+        'C♯/D♭': ['C',  'Eb',  'Gb',  'Bbb'], // C dim7 (Bbb = A)
+        'D':      ['C#', 'E',   'G',   'Bb'],  // C# dim7
+        'E♭':     ['D',  'F',   'Ab',  'Cb'],  // D dim7
+        'E':      ['D#', 'F#',  'A',   'C'],   // D# dim7
+        'F':      ['E',  'G',   'Bb',  'Db'],  // E dim7
+        'F♯/G♭': ['F',  'Ab',  'Cb',  'Ebb'], // F dim7 (Ebb = D)
+        'G':      ['F#', 'A',   'C',   'Eb'],  // F# dim7
+        'A♭':     ['G',  'Bb',  'Db',  'Fb'],  // G dim7 (Fb = E)
+        'A':      ['G#', 'B',   'D',   'F'],   // G# dim7
+        'B♭':     ['A',  'C',   'Eb',  'Gb'],  // A dim7
+        'B':      ['A#', 'C#',  'E',   'G'],   // A# dim7
+      },
+    };
+
+    // ─── Get chord notes from lookup table ────────────────────────────────────
+    function getChordNotes(key, formula) {
+      return (CHORD_NOTES[formula] && CHORD_NOTES[formula][key]) || [];
+    }
+
+    // ─── Convert note name → abcjs ABC notation with octave placement ─────────
+    // abcjs treble clef: C, = C3 (below staff), C = C4 (middle C, ledger line below),
+    // D E F G A B = D4-B4, c d e f g a b = C5-B5, c' = C6
+    // We assign octave so the chord sits in the middle of the treble staff (D4–G5 range).
+    //
+    // Strategy: assign each note to the octave that places it closest to middle of staff.
+    // Staff centre ≈ B4. We pick the octave that keeps the note in D4–B5 range.
+    //
+    // Pitch class order (ignoring accidentals): C D E F G A B = 0-6
+    const LETTER_PITCH = { C:0, D:1, E:2, F:3, G:4, A:5, B:6 };
+
+    function noteToAbc(note, forceOctave) {
+      // Parse accidental and letter
+      let acc = '', letter = '';
+      if (note.length >= 3 && note[1] === 'b' && note[2] === 'b') {
+        acc = '__'; letter = note[0];
+      } else if (note.length >= 3 && note[1] === '#' && note[2] === '#') {
+        acc = '^^'; letter = note[0];
+      } else if (note.length === 2 && note[1] === 'b') {
+        acc = '_';  letter = note[0];
+      } else if (note.length === 2 && note[1] === '#') {
+        acc = '^';  letter = note[0];
+      } else {
+        letter = note[0];
+      }
+
+      // If octave forced externally, use it
+      if (forceOctave !== undefined) {
+        if (forceOctave === 5) return acc + letter.toLowerCase();
+        if (forceOctave === 3) return acc + letter.toUpperCase() + ',';
+        return acc + letter.toUpperCase(); // octave 4
+      }
+
+      // Auto-place: put note in octave 4 unless it's C or D (too low for treble),
+      // in which case use octave 5 so it sits on the staff
+      const p = LETTER_PITCH[letter] ?? 0;
+      // Treble staff in ABC: D4(=D) E4(=E) F4(=F) G4(=G) A4(=A) B4(=B) sit on/near staff
+      // C4(=C) is middle C — one ledger line below, acceptable
+      // Use octave 4 for C-B, but for chords that start low (C,D,E as root) we may push up
+      return acc + letter.toUpperCase(); // default octave 4
+    }
+
+    // ─── Render chord on abcjs staff ──────────────────────────────────────────
+    // Place notes intelligently so they stack as a chord in root position on treble staff.
+    // Root goes in octave 4; subsequent notes go in the lowest octave above the previous note.
+    function renderChordStaff(notes) {
+      const LETTERS = ['C','D','E','F','G','A','B'];
+
+      // Get letter index (ignoring accidentals)
+      function letterIdx(note) {
+        return LETTERS.indexOf(note[0]);
+      }
+
+      // Build ABC note tokens with correct octave so notes ascend (root position)
+      let abcNotes = [];
+      let prevIdx = -1;
+      let octave = 4; // start in octave 4
+
+      for (let i = 0; i < notes.length; i++) {
+        const note = notes[i];
+        const idx = letterIdx(note);
+
+        if (i === 0) {
+          // Root: if C or D, use octave 4 (C4 = middle C, one ledger below staff — fine)
+          octave = 4;
+        } else {
+          // Each next note must be above the previous one
+          if (idx <= prevIdx) {
+            octave += 1; // jump up an octave
+          }
+        }
+        prevIdx = idx;
+
+        // Build ABC token
+        let acc = '';
+        let letter = note[0];
+        if (note.length >= 3 && note[1] === 'b' && note[2] === 'b') acc = '__';
+        else if (note.length >= 3 && note[1] === '#' && note[2] === '#') acc = '^^';
+        else if (note.length === 2 && note[1] === 'b') acc = '_';
+        else if (note.length === 2 && note[1] === '#') acc = '^';
+
+        let token = '';
+        if (octave === 3) token = acc + letter.toUpperCase() + ',';
+        else if (octave === 4) token = acc + letter.toUpperCase();
+        else if (octave === 5) token = acc + letter.toLowerCase();
+        else if (octave === 6) token = acc + letter.toLowerCase() + "'";
+        else token = acc + letter.toUpperCase();
+
+        abcNotes.push(token);
+      }
+
+      const chordAbc = '[' + abcNotes.join('4') + '4]';
+
+      ABCJS.renderAbc('chord-staff', `X:1\nL:1/4\nK:C\n${chordAbc}`, {
+        staffwidth: 220,
+        scale: 1.5,
+        paddingtop: 0,
+        paddingbottom: 0,
+        paddingleft: 10,
+        paddingright: 10,
+      });
+    }
+
+    // ─── Chord type detectors ─────────────────────────────────────────────────
+    function getChordFormula(typeStr) {
+      if (typeStr.includes('Diminished 7th')) return 'dim7';
+      if (typeStr.includes('Dominant 7th'))   return 'dom7';
+      if (typeStr.includes('Major'))          return 'major4';
+      if (typeStr.includes('Minor'))          return 'minor4';
+      return null;
+    }
+
+    function isChordType(typeStr) {
+      return typeStr.includes('chord') || typeStr.includes('arpeggio');
+    }
+
+    // ─── How-to interval chain ────────────────────────────────────────────────
+    function buildChordHowTo(formula, key) {
+      const chains = {
+        major4: [{label:'Root'},{semi:4},{label:'3rd'},{semi:3},{label:'5th'}],
+        minor4: [{label:'Root'},{semi:3},{label:'3rd'},{semi:4},{label:'5th'}],
+        dom7:   [{label:'Root'},{semi:4},{label:'3rd'},{semi:3},{label:'5th'},{semi:3},{label:'7th'}],
+        dim7:   [{label:'Root'},{semi:3},{label:'3rd'},{semi:3},{label:'5th'},{semi:3},{label:'7th'}],
+      };
+
+      const hints = {
+        dom7: `<p style="margin:0 0 12px;font-size:13px;color:#555;">The Root is the <strong>5th degree</strong> of the ${key} major scale.</p>`,
+        dim7: `<p style="margin:0 0 12px;font-size:13px;color:#555;">The Root is the <strong>7th degree</strong> (leading tone) of the ${key} major scale.</p>`,
+      };
+
+      const steps = chains[formula] || [];
+      let chain = `<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-top:4px;">`;
+      for (const item of steps) {
+        if (item.label !== undefined) {
+          chain += `<div class="interval-node">${item.label}</div>`;
+        } else {
+          chain += `<div style="display:flex;flex-direction:column;align-items:center;
+                      font-size:10px;color:#b05070;font-weight:bold;gap:1px;min-width:60px;">
+            <span>+${item.semi} st</span>
+            <span style="font-size:15px;color:#555;line-height:1;">──▶</span>
+          </div>`;
+        }
+      }
+      chain += `</div>`;
+      return (hints[formula] || '') + chain;
+    }
+
+    // ─── Display note name with Unicode accidentals ───────────────────────────
+    // Convert internal notation (Bbb, F#, Cb) to display (B𝄫, F♯, C♭)
+    function displayNote(note) {
+      return note
+        .replace(/bb$/, '𝄫')   // double flat
+        .replace(/##$/, '𝄪')   // double sharp
+        .replace(/b$/, '♭')    // flat
+        .replace(/#$/, '♯');   // sharp
+    }
+
+    // ─── Main Review Builder ──────────────────────────────────────────────────
+    const COMING_SOON = `<div class="review-card" style="text-align:center;padding:20px;color:#888;font-style:italic;">
+      ⏳ Data will be available soon
+    </div>`;
+
+    function buildReview(key, typeStr) {
+      // Scales and advanced options → always coming soon
+      if (typeStr.includes('scale') || typeStr.includes('formula') ||
+          typeStr.includes('octave') || typeStr.includes('3rd') || typeStr.includes('6th')) {
+        return COMING_SOON;
+      }
+
+      const formula = getChordFormula(typeStr);
+      if (!formula) return COMING_SOON;
+
+      const notes = getChordNotes(key, formula);
+
+      const pillsHtml = `<div class="review-card">
+        <h4>Chord Notes</h4>
+        <div class="notes-display">
+          ${notes.map(n => `<span class="note-pill">${displayNote(n)}</span>`).join('')}
+        </div>
+        <div id="chord-staff"></div>
+      </div>`;
+
+      const howToHtml = `
+        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+          How to find this chord <span>▼</span>
+        </div>
+        <div class="collapsible-body">
+          ${buildChordHowTo(formula, key)}
+        </div>`;
+
+      return pillsHtml + howToHtml;
+    }
+
+    // ─── Collapsible toggle ───────────────────────────────────────────────────
+    function toggleCollapsible(header) {
+      const body = header.nextElementSibling;
+      const arrow = header.querySelector('span');
+      const open = body.style.display === 'block';
+      body.style.display = open ? 'none' : 'block';
+      arrow.textContent = open ? '▼' : '▲';
+    }
+
+    // ─── Review section toggle ────────────────────────────────────────────────
+    function toggleReview() {
+      const section = document.getElementById('review-section');
+      reviewVisible = !reviewVisible;
+      section.style.display = reviewVisible ? 'block' : 'none';
+      document.getElementById('review-btn').textContent =
+        reviewVisible ? '✖ Hide Notes' : '📖 Review the Notes';
+
+      // Render staff only if the chord-staff div is present (i.e. review has chord content)
+      if (reviewVisible) {
+        setTimeout(() => {
+          const staffDiv = document.getElementById('chord-staff');
+          if (staffDiv) {
+            const formula = getChordFormula(lastType);
+            if (formula) {
+              const notes = getChordNotes(lastKey, formula);
+              renderChordStaff(notes);
+            }
+          }
+        }, 50);
+      }
+    }
+
+    // ─── Category toggle ──────────────────────────────────────────────────────
     function toggleCategory(category, select) {
       document.querySelectorAll('.' + category).forEach(cb => cb.checked = select);
     }
-  
+
+    // ─── Main Generator ───────────────────────────────────────────────────────
     function generateRandom() {
       const selectedTypes = [...document.querySelectorAll('.scale:checked, .chord:checked, .arpeggio:checked, .advancedOptions:checked')].map(cb => cb.value);
-      const selectedKeys = [...document.querySelectorAll('.key:checked')].map(cb => cb.value);
-      
+      const selectedKeys  = [...document.querySelectorAll('.key:checked')].map(cb => cb.value);
+
       if (selectedTypes.length === 0 || selectedKeys.length === 0) {
-        document.getElementById("result").textContent = "⚠️ Please select at least one key and one requirement.";
+        document.getElementById('result').textContent = '⚠️ Please select at least one key and one requirement.';
+        document.getElementById('review-btn').style.display = 'none';
+        document.getElementById('review-section').style.display = 'none';
         return;
       }
-  
+
       const type = selectedTypes[Math.floor(Math.random() * selectedTypes.length)];
-      const key = selectedKeys[Math.floor(Math.random() * selectedKeys.length)];
-  
-      let result = type.replace("KEY", key);
-      if (!type.includes("KEY")) {
-        result = key + " " + result;
-      }
-  
-      document.getElementById("result").textContent = result;
+      const key  = selectedKeys[Math.floor(Math.random() * selectedKeys.length)];
+
+      let result = type.replace('KEY', key);
+      if (!type.includes('KEY')) result = key + ' ' + result;
+
+      document.getElementById('result').textContent = result;
+
+      lastKey  = key;
+      lastType = type;
+      reviewVisible = false;
+
+      document.getElementById('review-section').style.display = 'none';
+      document.getElementById('review-content').innerHTML = buildReview(key, type);
+      document.getElementById('review-btn').style.display = 'inline-block';
+      document.getElementById('review-btn').textContent = '📖 Review the Notes';
     }
   </script>
 </body>
