@@ -1,17 +1,230 @@
 <!DOCTYPE html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Random Scale Generator</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 
   <!-- abcjs: renders chord notes on a musical staff (local copy) -->
   <script src="abcjs-basic-min.js"></script>
 
   <style>
+    :root {
+      --navy: #1a4d6f;
+      --navy-hover: #2a6d9f;
+      --sky: #d4e9f7;
+      --sky-deep: #b8dff0;
+      --sky-line: #a8d5e2;
+      --sky-soft: #eef7fb;
+      --page: #f5fafd;
+      --pink: 255, 90, 120;
+      --pink-dark: 150, 50, 60;
+      --muted: #5c7d93;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--navy);
+      font-family: "Nunito", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 32px 16px 120px;
+    }
+
+    /* ─── Header ─── */
+    .page-header { margin-bottom: 24px; }
+    .page-header h1 {
+      margin: 0;
+      font-size: clamp(26px, 5vw, 34px);
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+    .page-header p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    /* ─── Layout: generator first on mobile, sticky right column on desktop ─── */
+    .layout {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .generator-col { order: -1; }
+
+    @media (min-width: 860px) {
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 380px;
+        align-items: start;
+        gap: 32px;
+      }
+      .generator-col {
+        order: 0;
+        position: sticky;
+        top: 24px;
+      }
+    }
+
+    /* ─── Settings panels ─── */
+    .panel {
+      background: white;
+      border: 1px solid var(--sky-line);
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: 0 6px 18px -14px #7ab5d0;
+    }
+    .panel-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .panel-head h3 {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 800;
+    }
+    .panel-count {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      background: var(--sky-soft);
+      border-radius: 999px;
+      padding: 2px 9px;
+      font-variant-numeric: tabular-nums;
+    }
+    .panel-actions {
+      margin-left: auto;
+      display: flex;
+      gap: 4px;
+    }
+    .panel-actions button {
+      background: none;
+      border: none;
+      color: var(--navy);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      opacity: 0.75;
+    }
+    .panel-actions button:hover { background: var(--sky-soft); opacity: 1; }
+
+    /* Toggle chips (checkbox hidden, span styled) */
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .chip { position: relative; cursor: pointer; }
+    .chip input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .chip span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 36px;
+      padding: 7px 14px;
+      border: 1px solid var(--sky-line);
+      border-radius: 999px;
+      background: white;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.3;
+      transition: background .15s, color .15s, border-color .15s;
+      user-select: none;
+    }
+    .chip span::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      border: 1.5px solid var(--sky-line);
+      flex-shrink: 0;
+      transition: inherit;
+    }
+    .chip:hover span { border-color: var(--navy-hover); }
+    .chip input:checked + span {
+      background: var(--sky);
+      border-color: var(--navy);
+      color: var(--navy);
+    }
+    .chip input:checked + span::before {
+      background: rgb(var(--pink));
+      border-color: rgb(var(--pink));
+    }
+    .chip input:focus-visible + span {
+      outline: 2px solid var(--navy);
+      outline-offset: 2px;
+    }
+
+    /* Keys: 12-key grid */
+    .keys-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    @media (min-width: 520px) {
+      .keys-grid { grid-template-columns: repeat(6, 1fr); }
+    }
+    .keys-grid .chip span {
+      width: 100%;
+      justify-content: center;
+      border-radius: 10px;
+      min-height: 44px;
+      font-size: 15px;
+      font-weight: 700;
+    }
+    .keys-grid .chip span::before { display: none; }
+    .keys-grid .chip input:checked + span {
+      background: var(--navy);
+      color: white;
+    }
+
+    /* ─── Generator card ─── */
+    .generator {
+      background: white;
+      border: 1px solid var(--sky-line);
+      border-radius: 18px;
+      padding: 28px 20px 24px;
+      text-align: center;
+      box-shadow: 0 10px 30px -18px #7ab5d0;
+    }
+    .generator-label {
+      margin: 18px 0 0;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
     /* From Uiverse.io by catraco */
     .btn-class-name {
-      --primary: 255, 90, 120;
-      --secondary: 150, 50, 60;
-      width: 60px;
-      height: 50px;
+      --primary: var(--pink);
+      --secondary: var(--pink-dark);
+      width: 76px;
+      height: 64px;
       border: none;
       outline: none;
       cursor: pointer;
@@ -21,6 +234,8 @@
       border-radius: 100%;
       position: relative;
       transition: .3s;
+      background: none;
+      padding: 0;
     }
     .btn-class-name .back {
       background: rgb(var(--secondary));
@@ -51,76 +266,98 @@
       transform: translateY(0%);
       box-shadow: 0 0;
     }
+    .btn-class-name:focus-visible { outline-color: rgb(var(--primary)); }
 
-    /* Result Container */
+    /* Result stack: back cards absolute, front card grows with the text */
     .container {
-      margin-top: 80px;
-      width: 95%;
+      margin: 40px auto 0;
+      width: 100%;
       max-width: 380px;
-      margin-left: auto;
-      margin-right: auto;
       position: relative;
+      padding-top: 20px;
     }
     .container > * {
-      width: calc(100% - 20px);
-      height: 80px;
-      border: solid 1px #a8d5e2;
-      background-color: #d4e9f7;
-      position: absolute;
-      border-radius: 10px;
-      padding: 10px;
-      color: #1a4d6f;
+      border: solid 1px var(--sky-line);
+      background-color: var(--sky);
+      border-radius: 12px;
+      color: var(--navy);
       box-shadow: 0px 8px 20px -10px #7ab5d0;
-      text-shadow: none;
-      letter-spacing: 1px;
-      background-image: radial-gradient(circle 160px at 50% 120%, #b8dff0, #d4e9f7);
+      letter-spacing: 0.5px;
+      background-image: radial-gradient(circle 160px at 50% 120%, var(--sky-deep), var(--sky));
     }
-    .card1 { width: calc(100% - 60px); margin: -20px 0px 0px 20px; }
-    .card2 { width: calc(100% - 40px); margin: -10px 0px 0px 10px; }
+    .card1, .card2 {
+      position: absolute;
+      top: 0;
+      bottom: 20px;
+    }
+    .card1 { left: 20px; right: 20px; }
+    .card2 { left: 10px; right: 10px; top: 10px; bottom: 10px; }
+    .card3 {
+      position: relative;
+      min-height: 96px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 18px;
+    }
+    #result {
+      margin: 0;
+      font-size: clamp(17px, 4.6vw, 21px);
+      font-weight: 800;
+      line-height: 1.35;
+    }
+    #result.placeholder {
+      font-weight: 600;
+      color: var(--muted);
+      font-size: 15px;
+    }
+    #result.pop { animation: pop .35s ease-out; }
+    @keyframes pop {
+      0%   { transform: scale(.94); opacity: .3; }
+      100% { transform: scale(1);   opacity: 1; }
+    }
 
     /* Review Button */
     #review-btn {
       display: none;
-      margin: 133px auto 0 auto;
-      padding: 10px 22px;
-      background: #1a4d6f;
+      margin: 20px auto 0;
+      padding: 11px 22px;
+      background: var(--navy);
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
+      font: inherit;
       font-size: 15px;
+      font-weight: 700;
       cursor: pointer;
       width: fit-content;
       transition: background 0.2s;
     }
-    #review-btn:hover { background: #2a6d9f; }
+    #review-btn:hover { background: var(--navy-hover); }
 
     /* Review Section */
     #review-section {
       display: none;
-      margin-top: 50px;
-      width: 95%;
-      max-width: 380px;
-      margin-left: auto;
-      margin-right: auto;
-      font-family: Arial, sans-serif;
-      padding-bottom: 40px;
+      margin-top: 16px;
+      width: 100%;
+      text-align: left;
     }
 
     .review-card {
-      background: #eef7fb;
-      border: 1px solid #a8d5e2;
-      border-radius: 10px;
+      background: var(--sky-soft);
+      border: 1px solid var(--sky-line);
+      border-radius: 12px;
       padding: 16px;
-      margin-bottom: 14px;
-      color: #1a4d6f;
+      margin-bottom: 12px;
+      color: var(--navy);
     }
     .review-card h4 {
-      margin: 0 0 10px 0;
-      font-size: 15px;
+      margin: 0 0 12px 0;
+      font-size: 12px;
+      font-weight: 800;
       text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #1a4d6f;
-      opacity: 0.7;
+      letter-spacing: 0.12em;
+      color: var(--muted);
     }
 
     /* Note circles */
@@ -131,13 +368,13 @@
       margin-bottom: 8px;
     }
     .note-pill {
-      background: #1a4d6f;
+      background: var(--navy);
       color: white;
       border-radius: 50%;
       width: 48px;
       height: 48px;
-      font-size: 12px;
-      font-weight: bold;
+      font-size: 15px;
+      font-weight: 800;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -159,156 +396,246 @@
       width: 100% !important;
       height: auto !important;
     }
-    #chord-staff .abcjs-note { fill: #1a4d6f; }
-    #chord-staff .abcjs-staff { stroke: #1a4d6f; }
+    #chord-staff .abcjs-note { fill: var(--navy); }
+    #chord-staff .abcjs-staff { stroke: var(--navy); }
 
     /* Collapsible how-to */
     .collapsible-header {
       cursor: pointer;
-      background: #c8e6f5;
-      border: 1px solid #a8d5e2;
-      border-radius: 8px;
-      padding: 10px 14px;
+      background: white;
+      border: 1px solid var(--sky-line);
+      border-radius: 10px;
+      padding: 12px 14px;
       font-size: 14px;
-      font-weight: bold;
-      color: #1a4d6f;
+      font-weight: 700;
+      color: var(--navy);
       display: flex;
       justify-content: space-between;
       align-items: center;
       user-select: none;
-      margin-top: 10px;
     }
-    .collapsible-header:hover { background: #b0d8ef; }
+    .collapsible-header:hover { background: var(--sky-soft); }
     .collapsible-body {
       display: none;
       background: white;
-      border: 1px solid #a8d5e2;
+      border: 1px solid var(--sky-line);
       border-top: none;
-      border-radius: 0 0 8px 8px;
+      border-radius: 0 0 10px 10px;
       padding: 14px;
       font-size: 14px;
-      color: #1a4d6f;
+      color: var(--navy);
       line-height: 1.7;
     }
 
     /* Interval chain */
     .interval-node {
-      background: #1a4d6f;
+      background: var(--navy);
       color: white;
       border-radius: 50%;
-      width: 36px;
-      height: 36px;
+      width: 40px;
+      height: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: bold;
+      font-weight: 800;
       font-size: 12px;
       flex-shrink: 0;
       text-align: center;
       line-height: 1.2;
     }
+
+    /* ─── Mobile sticky generate bar (shown when main button is off-screen) ─── */
+    .mobile-bar {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+      background: rgba(245, 250, 253, .92);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-top: 1px solid var(--sky-line);
+      transform: translateY(110%);
+      transition: transform .25s ease;
+      z-index: 10;
+    }
+    .mobile-bar.visible { transform: translateY(0); }
+    .mobile-bar button {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      background: rgb(var(--pink));
+      color: white;
+      font: inherit;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 6px 0 rgb(var(--pink-dark));
+      transition: transform .1s, box-shadow .1s;
+    }
+    .mobile-bar button:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 rgb(var(--pink-dark));
+    }
+    @media (min-width: 860px) {
+      .mobile-bar { display: none; }
+    }
   </style>
 </head>
 
 <body>
-  <div style="font-family:Arial; max-width:800px; margin:auto; padding:20px; padding-bottom:200px; margin-bottom:100px;">
+  <div class="page">
 
-    <!-- SCALES -->
-    <div style="border:1px solid #ccc; padding:15px; margin-bottom:20px; border-radius:8px;">
-      <h3>Scales</h3>
-      <label><input type="checkbox" class="scale" value="Major scale" checked> Major</label><br>
-      <label><input type="checkbox" class="scale" value="Minor scale, harmonic form" checked> Harmonic Minor</label><br>
-      <label><input type="checkbox" class="scale" value="Minor scale, melodic form" checked> Melodic Minor</label><br>
-      <label><input type="checkbox" class="scale" value="Chromatic scale – starting on KEY" checked> Chromatic</label><br>
-      <label><input type="checkbox" class="scale" value="Major formula pattern" checked> Formula Major</label><br>
-      <label><input type="checkbox" class="scale" value="Minor formula pattern" checked> Formula Minor</label><br><br>
-      <button onclick="toggleCategory('scale', true)">Select All</button>
-      <button onclick="toggleCategory('scale', false)">Clear All</button>
-    </div>
+    <header class="page-header">
+      <h1>Random Scale Generator</h1>
+      <p>Pick what you're practising, then press the button for a random exercise.</p>
+    </header>
 
-    <!-- CHORDS -->
-    <div style="border:1px solid #ccc; padding:15px; margin-bottom:20px; border-radius:8px;">
-      <h3>Chords</h3>
-      <label><input type="checkbox" class="chord" value="Major four-note chord, solid form" checked> Major four-note chord, solid form</label><br>
-      <label><input type="checkbox" class="chord" value="Major four-note chord, broken form" checked> Major four-note chord, broken form</label><br>
-      <label><input type="checkbox" class="chord" value="Minor four-note chord, solid form" checked> Minor four-note chord, solid form</label><br>
-      <label><input type="checkbox" class="chord" value="Minor four-note chord, broken form" checked> Minor four-note chord, broken form</label><br>
-      <label><input type="checkbox" class="chord" value="Dominant 7th of KEY major, solid form" checked> Dominant 7th, solid form</label><br>
-      <label><input type="checkbox" class="chord" value="Dominant 7th of KEY major, broken form" checked> Dominant 7th, broken form</label><br>
-      <label><input type="checkbox" class="chord" value="Diminished 7th of KEY minor, solid form" checked> Diminished 7th, solid form</label><br>
-      <label><input type="checkbox" class="chord" value="Diminished 7th of KEY minor, broken form" checked> Diminished 7th, broken form</label><br><br>
-      <button onclick="toggleCategory('chord', true)">Select All</button>
-      <button onclick="toggleCategory('chord', false)">Clear All</button>
-    </div>
+    <div class="layout">
 
-    <!-- ARPEGGIOS -->
-    <div style="border:1px solid #ccc; padding:15px; margin-bottom:20px; border-radius:8px;">
-      <h3>Arpeggios</h3>
-      <label><input type="checkbox" class="arpeggio" value="Major arpeggio – root & inversions" checked> Major</label><br>
-      <label><input type="checkbox" class="arpeggio" value="Minor arpeggio – root & inversions" checked> Minor</label><br>
-      <label><input type="checkbox" class="arpeggio" value="Dominant 7th arpeggio of KEY major – root & inversions" checked> Dominant 7th</label><br>
-      <label><input type="checkbox" class="arpeggio" value="Diminished 7th arpeggio of KEY minor – root & inversions" checked> Diminished 7th</label><br><br>
-      <button onclick="toggleCategory('arpeggio', true)">Select All</button>
-      <button onclick="toggleCategory('arpeggio', false)">Clear All</button>
-    </div>
+      <!-- SETTINGS -->
+      <div class="settings-col">
 
-    <!-- ADVANCED OPTIONS -->
-    <div style="border:1px solid #ccc; padding:15px; margin-bottom:20px; border-radius:8px;">
-      <h3>Advanced Options</h3>
-      <label><input type="checkbox" class="advancedOptions" value="Major scale separated by a 3rd"> Separated by a 3rd</label><br>
-      <label><input type="checkbox" class="advancedOptions" value="Major scale separated by a 6th"> Separated by a 6th</label><br>
-      <label><input type="checkbox" class="advancedOptions" value="Major scale in octave"> Major scale in octaves</label><br>
-      <label><input type="checkbox" class="advancedOptions" value="Minor scale, harmonic form in octave"> Minor scale, harmonic form in octaves</label><br>
-      <label><input type="checkbox" class="advancedOptions" value="Minor scale, melodic form in octave"> Minor scale, melodic form in octaves</label><br>
-      <label><input type="checkbox" class="advancedOptions" value="Chromatic scale – starting on KEY in octave"> Chromatic scale in octaves</label><br><br>
-      <button onclick="toggleCategory('advancedOptions', true)">Select All</button>
-      <button onclick="toggleCategory('advancedOptions', false)">Clear All</button>
-    </div>
+        <!-- SCALES -->
+        <section class="panel" data-category="scale">
+          <div class="panel-head">
+            <h3>Scales</h3>
+            <span class="panel-count"></span>
+            <div class="panel-actions">
+              <button onclick="toggleCategory('scale', true)">All</button>
+              <button onclick="toggleCategory('scale', false)">None</button>
+            </div>
+          </div>
+          <div class="chips">
+            <label class="chip"><input type="checkbox" class="scale" value="Major scale" checked><span>Major</span></label>
+            <label class="chip"><input type="checkbox" class="scale" value="Minor scale, harmonic form" checked><span>Harmonic Minor</span></label>
+            <label class="chip"><input type="checkbox" class="scale" value="Minor scale, melodic form" checked><span>Melodic Minor</span></label>
+            <label class="chip"><input type="checkbox" class="scale" value="Chromatic scale – starting on KEY" checked><span>Chromatic</span></label>
+            <label class="chip"><input type="checkbox" class="scale" value="Major formula pattern" checked><span>Formula Major</span></label>
+            <label class="chip"><input type="checkbox" class="scale" value="Minor formula pattern" checked><span>Formula Minor</span></label>
+          </div>
+        </section>
 
-    <!-- KEYS -->
-    <div style="border:1px solid #ccc; padding:15px; margin-bottom:20px; border-radius:8px;">
-      <h3>Keys</h3>
-      <label><input type="checkbox" class="key" value="C" checked> C</label>
-      <label><input type="checkbox" class="key" value="C♯/D♭" checked> C♯/D♭</label>
-      <label><input type="checkbox" class="key" value="D" checked> D</label>
-      <label><input type="checkbox" class="key" value="E♭" checked> E♭</label>
-      <label><input type="checkbox" class="key" value="E" checked> E</label>
-      <label><input type="checkbox" class="key" value="F" checked> F</label>
-      <label><input type="checkbox" class="key" value="F♯/G♭" checked> F♯/G♭</label>
-      <label><input type="checkbox" class="key" value="G" checked> G</label>
-      <label><input type="checkbox" class="key" value="A♭" checked> A♭</label>
-      <label><input type="checkbox" class="key" value="A" checked> A</label>
-      <label><input type="checkbox" class="key" value="B♭" checked> B♭</label>
-      <label><input type="checkbox" class="key" value="B" checked> B</label><br><br>
-      <button onclick="toggleCategory('key', true)">Select All</button>
-      <button onclick="toggleCategory('key', false)">Clear All</button>
-    </div><br>
+        <!-- CHORDS -->
+        <section class="panel" data-category="chord">
+          <div class="panel-head">
+            <h3>Chords</h3>
+            <span class="panel-count"></span>
+            <div class="panel-actions">
+              <button onclick="toggleCategory('chord', true)">All</button>
+              <button onclick="toggleCategory('chord', false)">None</button>
+            </div>
+          </div>
+          <div class="chips">
+            <label class="chip"><input type="checkbox" class="chord" value="Major four-note chord, solid form" checked><span>Major · solid</span></label>
+            <label class="chip"><input type="checkbox" class="chord" value="Major four-note chord, broken form" checked><span>Major · broken</span></label>
+            <label class="chip"><input type="checkbox" class="chord" value="Minor four-note chord, solid form" checked><span>Minor · solid</span></label>
+            <label class="chip"><input type="checkbox" class="chord" value="Minor four-note chord, broken form" checked><span>Minor · broken</span></label>
+            <label class="chip"><input type="checkbox" class="chord" value="Dominant 7th of KEY major, solid form" checked><span>Dominant 7th · solid</span></label>
+            <label class="chip"><input type="checkbox" class="chord" value="Dominant 7th of KEY major, broken form" checked><span>Dominant 7th · broken</span></label>
+            <label class="chip"><input type="checkbox" class="chord" value="Diminished 7th of KEY minor, solid form" checked><span>Diminished 7th · solid</span></label>
+            <label class="chip"><input type="checkbox" class="chord" value="Diminished 7th of KEY minor, broken form" checked><span>Diminished 7th · broken</span></label>
+          </div>
+        </section>
 
-    <!-- GENERATOR -->
-    <div style="text-align:center; margin-top:30px;">
-      <button class="btn-class-name" onclick="generateRandom()">
-        <span class="back"></span>
-        <span class="front"></span>
-      </button><br>
-      <div class="container">
-        <div class="card1"></div>
-        <div class="card2"></div>
-        <div class="card3">
-          <p id="result" style="font-size:clamp(16px, 5vw, 22px); margin-top:15px; font-weight:bold;"></p>
+        <!-- ARPEGGIOS -->
+        <section class="panel" data-category="arpeggio">
+          <div class="panel-head">
+            <h3>Arpeggios</h3>
+            <span class="panel-count"></span>
+            <div class="panel-actions">
+              <button onclick="toggleCategory('arpeggio', true)">All</button>
+              <button onclick="toggleCategory('arpeggio', false)">None</button>
+            </div>
+          </div>
+          <div class="chips">
+            <label class="chip"><input type="checkbox" class="arpeggio" value="Major arpeggio – root & inversions" checked><span>Major</span></label>
+            <label class="chip"><input type="checkbox" class="arpeggio" value="Minor arpeggio – root & inversions" checked><span>Minor</span></label>
+            <label class="chip"><input type="checkbox" class="arpeggio" value="Dominant 7th arpeggio of KEY major – root & inversions" checked><span>Dominant 7th</span></label>
+            <label class="chip"><input type="checkbox" class="arpeggio" value="Diminished 7th arpeggio of KEY minor – root & inversions" checked><span>Diminished 7th</span></label>
+          </div>
+        </section>
+
+        <!-- ADVANCED OPTIONS -->
+        <section class="panel" data-category="advancedOptions">
+          <div class="panel-head">
+            <h3>Advanced</h3>
+            <span class="panel-count"></span>
+            <div class="panel-actions">
+              <button onclick="toggleCategory('advancedOptions', true)">All</button>
+              <button onclick="toggleCategory('advancedOptions', false)">None</button>
+            </div>
+          </div>
+          <div class="chips">
+            <label class="chip"><input type="checkbox" class="advancedOptions" value="Major scale separated by a 3rd"><span>Separated by a 3rd</span></label>
+            <label class="chip"><input type="checkbox" class="advancedOptions" value="Major scale separated by a 6th"><span>Separated by a 6th</span></label>
+            <label class="chip"><input type="checkbox" class="advancedOptions" value="Major scale in octave"><span>Major in octaves</span></label>
+            <label class="chip"><input type="checkbox" class="advancedOptions" value="Minor scale, harmonic form in octave"><span>Harmonic minor in octaves</span></label>
+            <label class="chip"><input type="checkbox" class="advancedOptions" value="Minor scale, melodic form in octave"><span>Melodic minor in octaves</span></label>
+            <label class="chip"><input type="checkbox" class="advancedOptions" value="Chromatic scale – starting on KEY in octave"><span>Chromatic in octaves</span></label>
+          </div>
+        </section>
+
+        <!-- KEYS -->
+        <section class="panel" data-category="key">
+          <div class="panel-head">
+            <h3>Keys</h3>
+            <span class="panel-count"></span>
+            <div class="panel-actions">
+              <button onclick="toggleCategory('key', true)">All</button>
+              <button onclick="toggleCategory('key', false)">None</button>
+            </div>
+          </div>
+          <div class="keys-grid">
+            <label class="chip"><input type="checkbox" class="key" value="C" checked><span>C</span></label>
+            <label class="chip"><input type="checkbox" class="key" value="C♯/D♭" checked><span>C♯/D♭</span></label>
+            <label class="chip"><input type="checkbox" class="key" value="D" checked><span>D</span></label>
+            <label class="chip"><input type="checkbox" class="key" value="E♭" checked><span>E♭</span></label>
+            <label class="chip"><input type="checkbox" class="key" value="E" checked><span>E</span></label>
+            <label class="chip"><input type="checkbox" class="key" value="F" checked><span>F</span></label>
+            <label class="chip"><input type="checkbox" class="key" value="F♯/G♭" checked><span>F♯/G♭</span></label>
+            <label class="chip"><input type="checkbox" class="key" value="G" checked><span>G</span></label>
+            <label class="chip"><input type="checkbox" class="key" value="A♭" checked><span>A♭</span></label>
+            <label class="chip"><input type="checkbox" class="key" value="A" checked><span>A</span></label>
+            <label class="chip"><input type="checkbox" class="key" value="B♭" checked><span>B♭</span></label>
+            <label class="chip"><input type="checkbox" class="key" value="B" checked><span>B</span></label>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- GENERATOR -->
+      <div class="generator-col">
+        <div class="generator">
+          <button class="btn-class-name" id="generate-btn" onclick="generateRandom()" aria-label="Generate a random exercise">
+            <span class="back"></span>
+            <span class="front"></span>
+          </button>
+          <p class="generator-label">Tap to generate</p>
+
+          <div class="container">
+            <div class="card1"></div>
+            <div class="card2"></div>
+            <div class="card3">
+              <p id="result" class="placeholder" aria-live="polite">Your exercise will appear here</p>
+            </div>
+          </div>
+
+          <!-- REVIEW BUTTON -->
+          <button id="review-btn" onclick="toggleReview()">📖 Review the Notes</button>
+
+          <!-- REVIEW SECTION -->
+          <div id="review-section">
+            <div id="review-content"></div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- REVIEW BUTTON -->
-    <div style="text-align:center;">
-      <button id="review-btn" onclick="toggleReview()">📖 Review the Notes</button>
     </div>
+  </div>
 
-    <!-- REVIEW SECTION -->
-    <div id="review-section">
-      <div id="review-content"></div>
-    </div>
-
+  <!-- MOBILE STICKY GENERATE BAR -->
+  <div class="mobile-bar" id="mobile-bar">
+    <button onclick="generateRandom(); document.querySelector('.generator').scrollIntoView({ behavior: 'smooth', block: 'start' });">🎲 Generate</button>
   </div>
 
   <script>
@@ -492,7 +819,7 @@
         staffwidth: 220,
         scale: 1.5,
         paddingtop: 0,
-        paddingbottom: 0,
+        paddingbottom: 12,
         paddingleft: 10,
         paddingright: 10,
       });
@@ -623,6 +950,38 @@
     // ─── Category toggle ──────────────────────────────────────────────────────
     function toggleCategory(category, select) {
       document.querySelectorAll('.' + category).forEach(cb => cb.checked = select);
+      updateCounts();
+    }
+
+    // ─── Panel "x/y" counts ───────────────────────────────────────────────────
+    function updateCounts() {
+      document.querySelectorAll('.panel[data-category]').forEach(panel => {
+        const boxes = panel.querySelectorAll('input[type="checkbox"]');
+        const checked = [...boxes].filter(cb => cb.checked).length;
+        panel.querySelector('.panel-count').textContent = `${checked}/${boxes.length}`;
+      });
+    }
+    document.addEventListener('change', e => {
+      if (e.target.matches('.panel input[type="checkbox"]')) updateCounts();
+    });
+    updateCounts();
+
+    // ─── Result text helper (placeholder style + pop animation) ───────────────
+    function setResult(text, isPlaceholder) {
+      const el = document.getElementById('result');
+      el.textContent = text;
+      el.classList.toggle('placeholder', !!isPlaceholder);
+      el.classList.remove('pop');
+      void el.offsetWidth; // restart animation
+      el.classList.add('pop');
+    }
+
+    // ─── Mobile sticky bar: show when the main button is off-screen ───────────
+    if ('IntersectionObserver' in window) {
+      const bar = document.getElementById('mobile-bar');
+      new IntersectionObserver(([entry]) => {
+        bar.classList.toggle('visible', !entry.isIntersecting);
+      }).observe(document.getElementById('generate-btn'));
     }
 
     // ─── Main Generator ───────────────────────────────────────────────────────
@@ -631,7 +990,7 @@
       const selectedKeys  = [...document.querySelectorAll('.key:checked')].map(cb => cb.value);
 
       if (selectedTypes.length === 0 || selectedKeys.length === 0) {
-        document.getElementById('result').textContent = '⚠️ Please select at least one key and one requirement.';
+        setResult('⚠️ Please select at least one key and one requirement.', true);
         document.getElementById('review-btn').style.display = 'none';
         document.getElementById('review-section').style.display = 'none';
         return;
@@ -643,7 +1002,7 @@
       let result = type.replace('KEY', key);
       if (!type.includes('KEY')) result = key + ' ' + result;
 
-      document.getElementById('result').textContent = result;
+      setResult(result, false);
 
       lastKey  = key;
       lastType = type;
