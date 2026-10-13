@@ -185,22 +185,26 @@
       outline-offset: 2px;
     }
 
-    /* Keys: 12-key grid */
+    /* Keys: 12-key grid, always 4 columns × 3 rows.
+       minmax(0, 1fr) lets columns shrink below "C♯/D♭" width on narrow screens. */
     .keys-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: clamp(4px, 1.5vw, 8px);
     }
-    @media (min-width: 520px) {
-      .keys-grid { grid-template-columns: repeat(6, 1fr); }
+    .keys-grid .chip {
+      display: block;
+      min-width: 0;
     }
     .keys-grid .chip span {
       width: 100%;
       justify-content: center;
       border-radius: 10px;
       min-height: 44px;
-      font-size: 15px;
+      padding: 7px 2px;
+      font-size: clamp(12px, 3.8vw, 15px);
       font-weight: 700;
+      white-space: nowrap;
     }
     .keys-grid .chip span::before { display: none; }
     .keys-grid .chip input:checked + span {
