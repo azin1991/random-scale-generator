@@ -1036,7 +1036,7 @@
 
       // Minor keys have a single spelling, so the raised notes follow sigs[0]
       let hint = '';
-      if (typeStr.includes('harmonic')) {
+      if (typeStr.includes('harmonic') || typeStr === 'Minor formula pattern') {
         hint = `<p class="keysig-hint">Harmonic form: raise the <strong>7th</strong> note, ascending and descending.</p>
           ${buildRaisedNotes(sigs[0], [7])}`;
       } else if (typeStr.includes('melodic')) {
