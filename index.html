@@ -395,7 +395,7 @@
     }
 
     /* abcjs staff container */
-    #chord-staff {
+    #chord-staff, .keysig-staff {
       background: white;
       border-radius: 8px;
       padding: 8px 4px 4px 4px;
@@ -403,12 +403,42 @@
       overflow: hidden;
     }
     /* Override abcjs default colours to match our theme */
-    #chord-staff svg {
+    #chord-staff svg, .keysig-staff svg {
       width: 100% !important;
       height: auto !important;
     }
     #chord-staff .abcjs-note { fill: var(--navy); }
     #chord-staff .abcjs-staff { stroke: var(--navy); }
+
+    /* Key signature blocks */
+    .keysig-block + .keysig-block { margin-top: 16px; }
+    .keysig-name {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--navy);
+    }
+    .keysig-accs {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .keysig-hint {
+      font-size: 13px;
+      color: #555;
+      margin: 12px 0 0;
+    }
+    .raised-notes { margin: 10px 0 0; }
+    .raised-note {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .raised-label {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--muted);
+    }
 
     /* Collapsible how-to */
     .collapsible-header {
@@ -911,13 +941,152 @@
         .replace(/#$/, '♯');   // sharp
     }
 
+    // ─── Key signatures (Major / minor scales) ────────────────────────────────
+    // count > 0 = number of sharps, count < 0 = number of flats.
+    // Enharmonic keys (C♯/D♭, F♯/G♭) list every spelling that is a real key;
+    // D♭ minor and G♭ minor would need double flats, so only the sharp spelling is used.
+    // A♭ minor is written as G♯ minor.
+    const KEY_SIGS = {
+      major: {
+        'C':      [{ name: 'C',  abc: 'C',  count: 0 }],
+        'C♯/D♭': [{ name: 'C♯', abc: 'C#', count: 7 }, { name: 'D♭', abc: 'Db', count: -5 }],
+        'D':      [{ name: 'D',  abc: 'D',  count: 2 }],
+        'E♭':     [{ name: 'E♭', abc: 'Eb', count: -3 }],
+        'E':      [{ name: 'E',  abc: 'E',  count: 4 }],
+        'F':      [{ name: 'F',  abc: 'F',  count: -1 }],
+        'F♯/G♭': [{ name: 'F♯', abc: 'F#', count: 6 }, { name: 'G♭', abc: 'Gb', count: -6 }],
+        'G':      [{ name: 'G',  abc: 'G',  count: 1 }],
+        'A♭':     [{ name: 'A♭', abc: 'Ab', count: -4 }],
+        'A':      [{ name: 'A',  abc: 'A',  count: 3 }],
+        'B♭':     [{ name: 'B♭', abc: 'Bb', count: -2 }],
+        'B':      [{ name: 'B',  abc: 'B',  count: 5 }],
+      },
+      minor: {
+        'C':      [{ name: 'C',  abc: 'Cm',  count: -3 }],
+        'C♯/D♭': [{ name: 'C♯', abc: 'C#m', count: 4 }],
+        'D':      [{ name: 'D',  abc: 'Dm',  count: -1 }],
+        'E♭':     [{ name: 'E♭', abc: 'Ebm', count: -6 }],
+        'E':      [{ name: 'E',  abc: 'Em',  count: 1 }],
+        'F':      [{ name: 'F',  abc: 'Fm',  count: -4 }],
+        'F♯/G♭': [{ name: 'F♯', abc: 'F#m', count: 3 }],
+        'G':      [{ name: 'G',  abc: 'Gm',  count: -2 }],
+        'A♭':     [{ name: 'G♯', abc: 'G#m', count: 5 }],
+        'A':      [{ name: 'A',  abc: 'Am',  count: 0 }],
+        'B♭':     [{ name: 'B♭', abc: 'Bbm', count: -5 }],
+        'B':      [{ name: 'B',  abc: 'Bm',  count: 2 }],
+      },
+    };
+
+    const SHARP_ORDER = ['F', 'C', 'G', 'D', 'A', 'E', 'B'];
+    const FLAT_ORDER  = ['B', 'E', 'A', 'D', 'G', 'C', 'F'];
+
+    // Which key-signature scale (if any) a requirement string is asking for
+    // (Major/minor scales, formula patterns, 3rds/6ths and octaves — not chromatic)
+    function getScaleMode(typeStr) {
+      if (typeStr.startsWith('Major scale') || typeStr === 'Major formula pattern') return 'major';
+      if (typeStr.startsWith('Minor scale') || typeStr === 'Minor formula pattern') return 'minor';
+      return null;
+    }
+
+    function getKeySigs(key, mode) {
+      return (KEY_SIGS[mode] && KEY_SIGS[mode][key]) || [];
+    }
+
+    // "3 sharps: F♯ C♯ G♯" / "No sharps or flats"
+    function describeKeySig(count) {
+      if (count === 0) return 'No sharps or flats';
+      const n = Math.abs(count);
+      const notes = count > 0
+        ? SHARP_ORDER.slice(0, n).map(l => l + '♯')
+        : FLAT_ORDER.slice(0, n).map(l => l + '♭');
+      const word = count > 0 ? (n === 1 ? 'sharp' : 'sharps') : (n === 1 ? 'flat' : 'flats');
+      return `${n} ${word}: ${notes.join(' ')}`;
+    }
+
+    // Spell a degree of the minor key (6 or 7) raised by a semitone,
+    // starting from its spelling in the key signature: B♭ → B♮, B → B♯, F♯ → F𝄪
+    function raisedDegree(sig, degree) {
+      const LETTERS = ['C','D','E','F','G','A','B'];
+      const letter = LETTERS[(LETTERS.indexOf(sig.abc[0]) + degree - 1) % 7];
+      const n = Math.abs(sig.count);
+      if (sig.count > 0 && SHARP_ORDER.slice(0, n).includes(letter)) return letter + '𝄪';
+      if (sig.count < 0 && FLAT_ORDER.slice(0, n).includes(letter))  return letter + '♮';
+      return letter + '♯';
+    }
+
+    function buildRaisedNotes(sig, degrees) {
+      return `<div class="notes-display raised-notes">
+        ${degrees.map(d => `<div class="raised-note">
+          <span class="note-pill">${raisedDegree(sig, d)}</span>
+          <span class="raised-label">♯${d}</span>
+        </div>`).join('')}
+      </div>`;
+    }
+
+    function buildKeySigReview(key, typeStr, mode) {
+      const sigs = getKeySigs(key, mode);
+      const modeName = mode === 'major' ? 'major' : 'minor';
+
+      const blocks = sigs.map((sig, i) => `
+        <div class="keysig-block">
+          <div class="keysig-name">${sig.name} ${modeName}</div>
+          <div class="keysig-accs">${describeKeySig(sig.count)}</div>
+          <div class="keysig-staff" id="keysig-staff-${i}"></div>
+        </div>`).join('');
+
+      // Minor keys have a single spelling, so the raised notes follow sigs[0]
+      let hint = '';
+      if (typeStr.includes('harmonic')) {
+        hint = `<p class="keysig-hint">Harmonic form: raise the <strong>7th</strong> note, ascending and descending.</p>
+          ${buildRaisedNotes(sigs[0], [7])}`;
+      } else if (typeStr.includes('melodic')) {
+        hint = `<p class="keysig-hint">Melodic form: raise the <strong>6th and 7th</strong> notes ascending, return to the key signature descending.</p>
+          ${buildRaisedNotes(sigs[0], [6, 7])}`;
+      }
+
+      return `<div class="review-card">
+        <h4>Key Signature</h4>
+        ${blocks}
+        ${hint}
+      </div>`;
+    }
+
+    // Draw a grand staff with just the clefs and key signature.
+    // An invisible rest (x) gives abcjs something to lay out after the signature.
+    function renderKeySigStaffs(key, mode) {
+      getKeySigs(key, mode).forEach((sig, i) => {
+        const abc = [
+          'X:1',
+          'L:1/4',
+          '%%staves {1 2}',
+          'V:1 clef=treble',
+          'V:2 clef=bass',
+          `K:${sig.abc}`,
+          '[V:1] x4',
+          '[V:2] x4',
+        ].join('\n');
+
+        ABCJS.renderAbc(`keysig-staff-${i}`, abc, {
+          staffwidth: 220,
+          scale: 1.5,
+          paddingtop: 0,
+          paddingbottom: 12,
+          paddingleft: 10,
+          paddingright: 10,
+        });
+      });
+    }
+
     // ─── Main Review Builder ──────────────────────────────────────────────────
     const COMING_SOON = `<div class="review-card" style="text-align:center;padding:20px;color:#888;font-style:italic;">
       ⏳ Data will be available soon
     </div>`;
 
     function buildReview(key, typeStr) {
-      // Scales and advanced options → always coming soon
+      const scaleMode = getScaleMode(typeStr);
+      if (scaleMode) return buildKeySigReview(key, typeStr, scaleMode);
+
+      // Other scales and advanced options → coming soon
       if (typeStr.includes('scale') || typeStr.includes('formula') ||
           typeStr.includes('octave') || typeStr.includes('3rd') || typeStr.includes('6th')) {
         return COMING_SOON;
@@ -975,6 +1144,8 @@
               renderChordStaff(notes);
             }
           }
+          const scaleMode = getScaleMode(lastType);
+          if (scaleMode) renderKeySigStaffs(lastKey, scaleMode);
         }, 50);
       }
     }
