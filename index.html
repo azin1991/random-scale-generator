@@ -440,33 +440,23 @@
       color: var(--muted);
     }
 
-    /* Collapsible how-to */
-    .collapsible-header {
-      cursor: pointer;
+    /* "Review the Notes" button inside a chord review (shown after the how-to) */
+    .notes-btn {
+      display: block;
+      margin: 0 auto 12px;
+      padding: 10px 20px;
       background: white;
-      border: 1px solid var(--sky-line);
+      color: var(--navy);
+      border: 1.5px solid var(--navy);
       border-radius: 10px;
-      padding: 12px 14px;
+      font: inherit;
       font-size: 14px;
       font-weight: 700;
-      color: var(--navy);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      user-select: none;
+      cursor: pointer;
+      transition: background 0.2s;
     }
-    .collapsible-header:hover { background: var(--sky-soft); }
-    .collapsible-body {
-      display: none;
-      background: white;
-      border: 1px solid var(--sky-line);
-      border-top: none;
-      border-radius: 0 0 10px 10px;
-      padding: 14px;
-      font-size: 14px;
-      color: var(--navy);
-      line-height: 1.7;
-    }
+    .notes-btn:hover { background: var(--sky-soft); }
+    #chord-notes { display: none; }
 
     /* Interval chain */
     .interval-node {
@@ -1097,32 +1087,32 @@
 
       const notes = getChordNotes(key, formula);
 
-      const pillsHtml = `<div class="review-card">
-        <h4>Chord Notes</h4>
-        <div class="notes-display">
-          ${notes.map(n => `<span class="note-pill">${displayNote(n)}</span>`).join('')}
-        </div>
-        <div id="chord-staff"></div>
+      // How-to first; the notes stay hidden until the student asks for them
+      const howToHtml = `<div class="review-card">
+        <h4>How to find this chord</h4>
+        ${buildChordHowTo(formula, key)}
       </div>`;
 
-      const howToHtml = `
-        <div class="collapsible-header" onclick="toggleCollapsible(this)">
-          How to find this chord <span>▼</span>
-        </div>
-        <div class="collapsible-body">
-          ${buildChordHowTo(formula, key)}
+      const notesHtml = `
+        <button class="notes-btn" onclick="toggleChordNotes(this)">🎵 Review the Notes</button>
+        <div class="review-card" id="chord-notes">
+          <h4>Chord Notes</h4>
+          <div class="notes-display">
+            ${notes.map(n => `<span class="note-pill">${displayNote(n)}</span>`).join('')}
+          </div>
+          <div id="chord-staff"></div>
         </div>`;
 
-      return pillsHtml + howToHtml;
+      return howToHtml + notesHtml;
     }
 
-    // ─── Collapsible toggle ───────────────────────────────────────────────────
-    function toggleCollapsible(header) {
-      const body = header.nextElementSibling;
-      const arrow = header.querySelector('span');
-      const open = body.style.display === 'block';
-      body.style.display = open ? 'none' : 'block';
-      arrow.textContent = open ? '▼' : '▲';
+    // ─── Chord notes toggle (staff is drawn once the card is visible) ─────────
+    function toggleChordNotes(btn) {
+      const card = document.getElementById('chord-notes');
+      const open = card.style.display === 'block';
+      card.style.display = open ? 'none' : 'block';
+      btn.textContent = open ? '🎵 Review the Notes' : '✖ Hide the Notes';
+      if (!open) renderChordStaff(getChordNotes(lastKey, getChordFormula(lastType)));
     }
 
     // ─── Review section toggle ────────────────────────────────────────────────
@@ -1133,17 +1123,9 @@
       document.getElementById('review-btn').textContent =
         reviewVisible ? '✖ Hide Notes' : '📖 Review the Notes';
 
-      // Render staff only if the chord-staff div is present (i.e. review has chord content)
+      // Chord staffs are drawn by toggleChordNotes; scales draw their key signature here
       if (reviewVisible) {
         setTimeout(() => {
-          const staffDiv = document.getElementById('chord-staff');
-          if (staffDiv) {
-            const formula = getChordFormula(lastType);
-            if (formula) {
-              const notes = getChordNotes(lastKey, formula);
-              renderChordStaff(notes);
-            }
-          }
           const scaleMode = getScaleMode(lastType);
           if (scaleMode) renderKeySigStaffs(lastKey, scaleMode);
         }, 50);
